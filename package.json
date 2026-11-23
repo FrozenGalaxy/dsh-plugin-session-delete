@@ -1,42 +1,54 @@
 {
   "name": "@huanlin/dsh-plugin-session-delete",
-  "version": "0.3.1",
-  "description": "Delete sessions of a DeepSeek Harness profile from the UI: header danger button + session-row menu item with a risk-consent dialog; host endpoint + tool delete the log, projection cache and workspace accounting. Works in web and the desktop client alike.",
+  "version": "0.4.1",
+  "description": "Permanently delete DeepSeek Harness sessions from the header or sidebar, with explicit confirmation and synchronized host cleanup. English-only DSH 0.2.x port.",
   "type": "module",
   "license": "MIT",
-  "publishConfig": {
-    "access": "public"
-  },
-  "keywords": ["dsh-plugin"],
+  "private": true,
+  "keywords": [
+    "dsh-plugin",
+    "deepseek-harness",
+    "session-management"
+  ],
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/lsz-asd/dsh-plugin-session-delete.git"
+    "url": "git+https://github.com/FrozenGalaxy/dsh-plugin-session-delete.git"
   },
   "files": [
     "src/",
-    "cordis.patch.yml"
+    "locale/",
+    "cordis.patch.yml",
+    "LICENSE",
+    "NOTICE.md",
+    "README.md"
   ],
   "engines": {
-    "node": ">=20"
+    "node": ">=20",
+    "dsh": ">=0.2.2-rc.5 <0.3.0-0"
   },
   "main": "src/index.js",
   "exports": {
     ".": "./src/index.js",
     "./client": "./src/client.js",
-    "./package.json": "./package.json"
+    "./package.json": "./package.json",
+    "./locale/*.json": "./locale/*.json"
   },
   "dsh": {
+    "manifestVersion": 1,
     "bundle": {
       "patch": "./cordis.patch.yml"
     },
     "client": {
       "inject": [
-        "@deepseek-ai/dsh-client-runtime"
+        "@deepseek-ai/dsh-client-locale",
+        "@deepseek-ai/dsh-client-ui-conversation",
+        "@deepseek-ai/dsh-client-ui-workspace"
       ],
       "platform": "web"
     }
   },
-  "peerDependencies": {
-    "@deepseek-ai/dsh-tools": "^0.1.0-rc.6"
+  "scripts": {
+    "test": "node --test",
+    "check": "node --check src/core.js && node --check src/index.js && node --check src/client.js && node --test"
   }
 }

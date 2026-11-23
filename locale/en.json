@@ -1,0 +1,6 @@
+{
+  "meta": {
+    "title": "Session Delete",
+    "description": "Permanently delete a DSH session from the header or sidebar, after an explicit confirmation."
+  }
+}

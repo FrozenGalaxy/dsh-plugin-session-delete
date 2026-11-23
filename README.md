@@ -1,69 +1,116 @@
-# dsh-plugin-session-delete
+# DeepSeek Harness Session Delete (English, DSH 0.2.x)
 
-你是否困扰于 web 端无法删除对话？是否觉得归档对话键只是隐藏对话，删除得不够彻底？是否在尝试编辑 harness 时遇到对话话历史无法同步，而损坏的对话又无法删除？这个插件可以帮你！
+Delete conversations permanently from DeepSeek Harness on desktop or the web.
+This is an English-only, locally reconstructed port of
+[`lsz-asd/dsh-plugin-session-delete`](https://github.com/lsz-asd/dsh-plugin-session-delete).
+The original package name and plugin configuration row are retained.
 
-**在 DeepSeek Harness 界面里安全地彻底删除会话。** 在会话顶部添加垃圾桶按钮，侧栏会话行 "..." 菜单内添加"删除会话"项，点击后出现风险确认弹窗（需勾选）；确认后会删除会话日志、投影缓存与工作区记账；运行中的会话会有提示，若仍选择删除会停止运行并删除。可在web中使用，并且理论上兼容一切web套壳的客户端。
-**添加agent工具让agent可以删除会话。** 工具名`workbench_session_delete`
-
-## 安装
-
-```sh
-dsh plugin --profile <profile> add file:C:/path/to/dsh-plugin-session-delete
-```
-
-重启 profile 生效。
-
-## 功能
-
-- 会话头部垃圾桶按钮
-- 侧栏会话行 "..." 菜单注入"删除会话"项
-- `RiskConfirmation` 风险确认：勾选"我已了解后果"后确认可用
-- 删除链路：会话目录 + 投影缓存 + 工作区记账（经活动 storageDomain，内存/磁盘一致）
-- `workbench_session_delete` 工具：agent 可直接删除会话
-
-## 后续开发计划
-
-- 添加更多针对会话的操作工具和选项
-- 将已有的针对会话的选项做成工具提供给agent
-- 
-<img width="1800" height="1020" alt="image" src="https://github.com/user-attachments/assets/c66f6185-457d-4261-9e10-1b44b9959896" />
-
-## 更新日志
-
-- **v0.3.1（2026-08-14）**：修复删除会话后残留日志导致会话跑到「未分组」的问题。删除时同时清理原始 id 与 `session-` 前缀两种 id 形式；先删除磁盘日志并确认成功后再解除工作区记账，避免半删除会话脱离原分组；删除前先 flush 活动会话，防止 dispose 阶段回写/重建日志目录。
-- **v0.3.0（2026-08-14）**：新增英文适配（i18n）。删除对话框、头部垃圾桶按钮与侧栏「删除会话」菜单项的全部文案接入客户端 zh/en 字典，跟随界面语言（设置中的语言或浏览器语言）自动切换并即时生效；未加载 locale 服务的环境会按浏览器语言回退到内置中英文字典。
-
----
-
-# dsh-plugin-session-delete
-
-Frustrated that sessions can't be deleted from the web client? Bothered by abandoned or mistyped conversations cluttering your sidebar? Ever tried editing your harness only to find the session history out of sync — with a corrupted session that just won't go away? This plugin has your back!
-
-**Safely delete sessions from the DeepSeek Harness UI.** Adds a trash button at the top of the conversation and a "Delete session" item to the sidebar session-row "..." menu; clicking either opens a risk-consent dialog (checkbox required). On confirm, the session log, projection cache and workspace accounting are removed. Running sessions show a warning — if you still choose to delete, the session is stopped and then deleted. Works in the web, and is theoretically compatible with any web-shell-based client.
-**Also adds an agent tool so agents can delete sessions.** Tool name: `workbench_session_delete`
-
-## Installation
-
-```sh
-dsh plugin --profile <profile> add file:C:/path/to/dsh-plugin-session-delete
-```
-
-Restart the profile to apply.
+**Primary target:** DSH `0.2.2-rc.5`. The manifest permits later pre-0.3 versions, but those require separate validation. The original v0.3.1
+required `@deepseek-ai/dsh-tools@^0.1.0-rc.6` and DSH 0.2.2 refused to load
+it. This port uses DSH 0.2.x plugin-manifest metadata and its newer UI slots.
 
 ## Features
 
-- Trash button at the top of the conversation
-- "Delete session" item injected into the sidebar session-row "..." menu
-- `RiskConfirmation` risk-consent dialog: confirm is only enabled after ticking "I understand the consequences"
-- Delete chain: session log + projection cache + workspace accounting (through the active storageDomain, so in-memory state and on-disk units stay consistent)
-- `workbench_session_delete` tool: agents can delete sessions directly
+- Trash action in the conversation header.
+- **Delete session** action at the bottom of the sidebar session menu.
+- Explicit confirmation checkbox, permanent-deletion warning, and active-task notice.
+- Cancels registered live agents under both supported session-ID spellings and waits for them to become idle before removing files.
+- Deletes session logs, projection-cache records, and workspace ownership,
+  pinned, and archived references without a full page reload.
+- Refreshes the sidebar with `sessions.refresh()` and uses
+  `uiWorkspace.openSession()` / `clearMain()` for navigation.
+- Deletes per-session browser UI state, including GENUI interaction order, after a confirmed host-side deletion without touching unrelated preferences.
+- Agent tool named `workbench_session_delete`.
+- English user interface, error messages, code comments, and documentation.
 
-## Roadmap
+**This is a permanent delete operation, not archive or recycle bin.** Back up
+important sessions first. The agent tool can also initiate deletion when given
+an explicit instruction to do so.
 
-- Add more session-operation tools and options
-- Expose the existing session options to agents as tools
+## Install (Windows desktop)
 
-## Changelog
+1. Extract the ZIP. It contains the folder `dsh-plugin-session-delete`.
+2. Stop the desktop profile before replacing an installed copy.
+3. Copy the folder to `%USERPROFILE%\.dsh\dsh-plugin-session-delete` (normally `C:\Users\<username>\.dsh\dsh-plugin-session-delete`).
+4. In `cmd.exe`, run:
 
-- **v0.3.1 (2026-08-14)**: Fixed deleted sessions being left as "Ungrouped" rows after a partial delete. The host now cleans both raw UUID and `session-`-prefixed id forms, deletes the on-disk log and confirms it before removing workspace accounting (so a failed delete cannot detach a session from its group), and flushes a live session before detaching it to prevent dispose-time rewrites from recreating the log directory.
-- **v0.3.0 (2026-08-14)**: Added English adaptation (i18n). All copy of the delete dialog, the header trash button and the sidebar "Delete session" menu item now lives in client zh/en dictionaries and follows the UI language (the language setting or the browser language), updating live on switch; environments without the locale service fall back to the built-in dictionaries by browser language.
+```bat
+cd /d "%USERPROFILE%\.dsh"
+dsh plugin --profile desktop add "file:%USERPROFILE%\.dsh\dsh-plugin-session-delete"
+```
+
+Restart the desktop profile after installation.
+
+To validate that the plugin row was included in the configuration:
+
+```bat
+dsh --profile desktop --dump-config
+```
+
+**Do not run `allow-version`** for the old v0.3.1 package. It merely overrides
+an installation guard and does not repair incompatible APIs.
+
+## Install notes
+
+The package has no outdated `@deepseek-ai/dsh-tools` peer range. It instead
+uses `dsh.manifestVersion: 1`, supported client injection modules, and an
+`engines.dsh` range beginning at `0.2.2-rc.5`. DSH supplies its own runtime
+services. Do not independently install or downgrade Harness internals into the
+plugin folder.
+
+The original package ID (`@huanlin/dsh-plugin-session-delete`) stays the same,
+so the old plugin can be upgraded rather than installed under a second ID.
+
+## Official API references
+
+The official [API package map](https://github.com/deepseek-ai/deepseek-harness/blob/master/packages/api/README.md)
+explains the Client-to-Host Remote layer. Its
+[Session Controller](https://github.com/deepseek-ai/deepseek-harness/blob/master/packages/api/session-controller/README.md)
+and [Workspace Controller](https://github.com/deepseek-ai/deepseek-harness/blob/master/packages/api/workspace-controller/README.md)
+expose normal Session and Workspace operations to the UI. They do **not**
+document a public permanent-session-deletion Remote method. Therefore this
+external plugin must use its own same-origin Host HTTP route, the Host
+[session store](https://github.com/deepseek-ai/deepseek-harness/blob/master/packages/core/session/README.md),
+and the live [workspace registry](https://github.com/deepseek-ai/deepseek-harness/blob/master/packages/workspace/workspace/README.md)
+for bookkeeping. These are less stable implementation-level interfaces than
+published Remote methods, and are why a real-profile compatibility test is
+necessary before relying on deletion.
+
+## Test
+
+```sh
+npm test
+npm run check
+```
+
+Tests use Node's built-in test runner, no external packages, and temporary
+session directories. They cover path traversal prevention, storage cleanup,
+agent-stop failures, dual ID spellings, source-language checks, and UI slot
+registration. They do not launch a real DSH desktop runtime.
+
+## Compatibility and limitations
+
+- **Not yet smoke-tested against your actual desktop installation.** Syntax
+  checks and isolated tests are not a substitute for a real-profile test.
+- Designed for DSH 0.2.2-rc.5 from the official manifest and the DSH 0.2.x
+  client/host APIs observed in a more recent community fork.
+- Host deletion preserves the original plugin's scope: session log directories,
+  projection rows, and workspace references. This port does **not** implement
+  the fork's optional attachment garbage collector or general orphan cleanup.
+  Attached blobs that might be shared between sessions are not deleted.
+- If DSH changes the layout of session persistence or service methods in a
+  later prerelease, deletion may refuse to proceed. This is preferable to
+  deleting an unknown path or proceeding while the agent is still active.
+- DSH service availability varies by profile. The HTTP endpoint is registered
+  only when the `webServer` service exists. The agent tool requires `tools`.
+- The endpoint uses the same-origin browser request fence; as with the original
+  plugin, local processes that can reach the server are not authenticated by
+  this endpoint. Do not expose the development web server to untrusted networks.
+
+## Credits
+
+Original MIT project: [lsz-asd/dsh-plugin-session-delete](https://github.com/lsz-asd/dsh-plugin-session-delete).
+
+DSH 0.2.x API reference: [SUKJG1052/DSH-Plugin-Session-Delete](https://github.com/SUKJG1052/DSH-Plugin-Session-Delete).
+
+See [NOTICE.md](NOTICE.md) for the reconstruction and attribution details.
